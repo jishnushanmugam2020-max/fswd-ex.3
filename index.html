@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LeaveDesk Leave Management</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f2;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    background-color: #154d29;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header h1 {
+    margin: 0;
+  }
+  .tabs button {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+    padding: 8px 22px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 15px;
+    margin-left: 8px;
+  }
+  .tabs button.active {
+    background-color: #e2412f;
+    border-color: #e2412f;
+  }
+
+  .container {
+    width: 95%;
+    max-width: 1100px;
+    margin: 20px auto;
+  }
+
+  /* Summary boxes */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  .summary-box {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .summary-box .number {
+    font-size: 30px;
+    font-weight: bold;
+  }
+  .summary-box.pending .number {
+    color: #d98a00;
+  }
+  .summary-box.approved .number {
+    color: #1f6b3a;
+  }
+  .summary-box.rejected .number {
+    color: #e2412f;
+  }
+
+  /* Filter buttons */
+  .filters {
+    margin-bottom: 15px;
+  }
+  .filters button {
+    background-color: white;
+    border: 1.5px solid #ccc;
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  .filters button.active {
+    background-color: #1f6b3a;
+    border-color: #1f6b3a;
+    color: white;
+  }
+
+  /* Cards: always 2 in each row */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  .item {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .item .emoji {
+    font-size: 46px;
+    width: 70px;
+    text-align: center;
+  }
+  .item .details {
+    flex: 1;
+  }
+  .item h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+  }
+  .item p {
+    color: #666;
+    font-size: 13px;
+    margin: 0 0 4px 0;
+  }
+  .item .dates {
+    font-size: 13px;
+    font-weight: bold;
+    color: #154d29;
+  }
+  .item .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* Status tags */
+  .tag {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    color: white;
+  }
+  .tag.Pending {
+    background-color: #d98a00;
+  }
+  .tag.Approved {
+    background-color: #1f6b3a;
+  }
+  .tag.Rejected {
+    background-color: #e2412f;
+  }
+
+  .approve-btn {
+    background-color: #1f6b3a;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .reject-btn {
+    background-color: #e2412f;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .cancel-leave-btn {
+    background-color: #888;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .empty-text {
+    color: #666;
+    padding: 20px 0;
+  }
+
+  /* Leave form */
+  .leave-form {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 520px;
+    margin-bottom: 25px;
+  }
+  label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  input, textarea, select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    font-size: 14px;
+  }
+  .error {
+    color: red;
+    font-size: 13px;
+  }
+  .main-btn {
+    width: 100%;
+    background-color: #e2412f;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 15px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .row-two {
+    display: flex;
+    gap: 10px;
+  }
+  .row-two div {
+    flex: 1;
+  }
+
+  /* Popup */
+  .popup-bg {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    overflow: auto;
+  }
+  .popup-box {
+    background-color: white;
+    width: 360px;
+    max-width: 90%;
+    margin: 120px auto;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  .tick {
+    width: 70px;
+    height: 70px;
+    line-height: 70px;
+    font-size: 38px;
+    color: white;
+    background-color: #1f6b3a;
+    border-radius: 50%;
+    margin: 0 auto 10px auto;
+  }
+  .done-btn {
+    background-color: #1f6b3a;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  /* Small phones: keep 2 per row, emoji above the text */
+  @media (max-width: 600px) {
+    .grid {
+      gap: 8px;
+    }
+    .item {
+      flex-direction: column;
+      text-align: center;
+      padding: 10px;
+    }
+    .item .emoji {
+      font-size: 36px;
+      width: auto;
+    }
+    .item .details {
+      width: 100%;
+    }
+    .item .bottom {
+      flex-direction: column;
+    }
+    .item h3 {
+      font-size: 14px;
+    }
+    .item p {
+      display: none;
+    }
+    .summary {
+      gap: 8px;
+    }
+    .row-two {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>LeaveDesk</h1>
+    <div class="tabs">
+      <button id="tabEmployee" class="active" onclick="showPage('employee')">Employee</button>
+      <button id="tabManager" onclick="showPage('manager')">Manager</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- EMPLOYEE PAGE -->
+    <div id="employeePage">
+      <h2>Apply for Leave</h2>
+      <div class="leave-form">
+
+        <label>Employee Name</label>
+        <input type="text" id="empName">
+        <div class="error" id="errName"></div>
+
+        <label>Employee ID</label>
+        <input type="text" id="empId">
+        <div class="error" id="errId"></div>
+
+        <label>Leave Type</label>
+        <select id="leaveType">
+          <option value="Casual Leave">Casual Leave</option>
+          <option value="Sick Leave">Sick Leave</option>
+          <option value="Annual Leave">Annual Leave</option>
+          <option value="Family Function">Family Function</option>
+          <option value="Emergency Leave">Emergency Leave</option>
+        </select>
+
+        <div class="row-two">
+          <div>
+            <label>From Date</label>
+            <input type="date" id="fromDate">
+            <div class="error" id="errFrom"></div>
+          </div>
+          <div>
+            <label>To Date</label>
+            <input type="date" id="toDate">
+            <div class="error" id="errTo"></div>
+          </div>
+        </div>
+
+        <label>Reason</label>
+        <textarea id="reason" rows="3"></textarea>
+        <div class="error" id="errReason"></div>
+
+        <button class="main-btn" onclick="applyLeave()">Send Leave Request</button>
+      </div>
+
+      <h2>All Leave Requests</h2>
+      <div class="grid" id="employeeList"></div>
+    </div>
+
+    <!-- MANAGER PAGE -->
+    <div id="managerPage" style="display:none;">
+      <h2>Manage Leave Requests</h2>
+
+      <div class="summary">
+        <div class="summary-box pending">
+          <div class="number" id="countPending">0</div>
+          <div>Pending</div>
+        </div>
+        <div class="summary-box approved">
+          <div class="number" id="countApproved">0</div>
+          <div>Approved</div>
+        </div>
+        <div class="summary-box rejected">
+          <div class="number" id="countRejected">0</div>
+          <div>Rejected</div>
+        </div>
+      </div>
+
+      <div class="filters" id="filterButtons">
+        <button id="f-All" class="active" onclick="setFilter('All')">All</button>
+        <button id="f-Pending" onclick="setFilter('Pending')">Pending</button>
+        <button id="f-Approved" onclick="setFilter('Approved')">Approved</button>
+        <button id="f-Rejected" onclick="setFilter('Rejected')">Rejected</button>
+      </div>
+
+      <div class="grid" id="managerList"></div>
+    </div>
+
+  </div>
+
+  <!-- MESSAGE POPUP -->
+  <div class="popup-bg" id="msgPopup">
+    <div class="popup-box">
+      <div class="tick">&#10003;</div>
+      <h2 id="msgTitle"></h2>
+      <p id="msgText"></p>
+      <button class="done-btn" onclick="closeMsgPopup()">Done</button>
+    </div>
+  </div>
+
+<script>
+  // Default leave requests (shown the first time)
+  var defaultLeaves = [
+    { id: 1, name: "Arun Kumar",  empId: "E101", type: "Sick Leave",      from: "2026-11-12", to: "2026-11-13", days: 2, reason: "Fever and doctor visit",   status: "Pending" },
+    { id: 2, name: "Priya Devi",  empId: "E102", type: "Annual Leave",    from: "2026-11-20", to: "2026-11-24", days: 5, reason: "Family trip",              status: "Approved" },
+    { id: 3, name: "Karthik R",   empId: "E103", type: "Casual Leave",    from: "2026-11-15", to: "2026-11-15", days: 1, reason: "Personal work",            status: "Rejected" },
+    { id: 4, name: "Meena S",     empId: "E104", type: "Family Function", from: "2026-11-18", to: "2026-11-19", days: 2, reason: "Cousin's wedding",         status: "Pending" }
+  ];
+
+  var leaves = [];
+  var currentFilter = "All";
+
+  // Load leaves from the browser memory
+  function loadLeaves() {
+    var saved = null;
+    try {
+      saved = localStorage.getItem("leaveDeskData");
+    } catch (e) {
+      saved = null;
+    }
+    if (saved) {
+      leaves = JSON.parse(saved);
+    } else {
+      leaves = defaultLeaves;
+    }
+  }
+
+  // Save leaves in the browser memory
+  function saveLeaves() {
+    try {
+      localStorage.setItem("leaveDeskData", JSON.stringify(leaves));
+    } catch (e) {
+      // saving not available, ignore
+    }
+  }
+
+  // Make user text safe to show on the page
+  function safeText(text) {
+    text = String(text);
+    text = text.replace(/&/g, "&amp;");
+    text = text.replace(/</g, "&lt;");
+    text = text.replace(/>/g, "&gt;");
+    return text;
+  }
+
+  // Emoji for each leave type
+  function getEmoji(type) {
+    if (type == "Sick Leave") { return "🤒"; }
+    if (type == "Annual Leave") { return "✈️"; }
+    if (type == "Family Function") { return "🎉"; }
+    if (type == "Emergency Leave") { return "🚨"; }
+    return "🏖️";
+  }
+
+  // Switch between Employee and Manager pages
+  function showPage(page) {
+    if (page == "employee") {
+      document.getElementById("employeePage").style.display = "block";
+      document.getElementById("managerPage").style.display = "none";
+      document.getElementById("tabEmployee").className = "active";
+      document.getElementById("tabManager").className = "";
+    } else {
+      document.getElementById("employeePage").style.display = "none";
+      document.getElementById("managerPage").style.display = "block";
+      document.getElementById("tabEmployee").className = "";
+      document.getElementById("tabManager").className = "active";
+    }
+    showAll();
+  }
+
+  // Build the details part of a card
+  function cardDetails(l) {
+    var html = "";
+    html += '<div class="emoji">' + getEmoji(l.type) + '</div>';
+    html += '<div class="details">';
+    html += '<h3>' + safeText(l.name) + ' (' + safeText(l.empId) + ')</h3>';
+    html += '<p>' + safeText(l.type) + ' - ' + safeText(l.reason) + '</p>';
+    html += '<div class="dates">' + l.from + ' to ' + l.to + ' (' + l.days + (l.days == 1 ? ' day' : ' days') + ')</div>';
+    return html;
+  }
+
+  // Show all cards, counts and lists
+  function showAll() {
+    var empHtml = "";
+    var mgrHtml = "";
+    var pending = 0;
+    var approved = 0;
+    var rejected = 0;
+    var shown = 0;
+
+    for (var i = 0; i < leaves.length; i++) {
+      var l = leaves[i];
+
+      if (l.status == "Pending") { pending++; }
+      if (l.status == "Approved") { approved++; }
+      if (l.status == "Rejected") { rejected++; }
+
+      // card for employees
+      empHtml += '<div class="item">';
+      empHtml += cardDetails(l);
+      empHtml += '<div class="bottom"><span class="tag ' + l.status + '">' + l.status + '</span>';
+      if (l.status == "Pending") {
+        empHtml += '<button class="cancel-leave-btn" onclick="cancelLeave(' + l.id + ')">Cancel</button>';
+      }
+      empHtml += '</div></div></div>';
+
+      // card for manager (only the selected filter)
+      if (currentFilter == "All" || currentFilter == l.status) {
+        shown++;
+        mgrHtml += '<div class="item">';
+        mgrHtml += cardDetails(l);
+        mgrHtml += '<div class="bottom">';
+        if (l.status == "Pending") {
+          mgrHtml += '<button class="approve-btn" onclick="changeStatus(' + l.id + ', \'Approved\')">Approve</button>';
+          mgrHtml += '<button class="reject-btn" onclick="changeStatus(' + l.id + ', \'Rejected\')">Reject</button>';
+        } else {
+          mgrHtml += '<span class="tag ' + l.status + '">' + l.status + '</span>';
+        }
+        mgrHtml += '</div></div></div>';
+      }
+    }
+
+    if (leaves.length == 0) {
+      empHtml = '<div class="empty-text">No leave requests yet.</div>';
+    }
+    if (shown == 0) {
+      mgrHtml = '<div class="empty-text">No leave requests found.</div>';
+    }
+
+    document.getElementById("employeeList").innerHTML = empHtml;
+    document.getElementById("managerList").innerHTML = mgrHtml;
+    document.getElementById("countPending").innerHTML = pending;
+    document.getElementById("countApproved").innerHTML = approved;
+    document.getElementById("countRejected").innerHTML = rejected;
+  }
+
+  // Change the manager filter
+  function setFilter(filter) {
+    currentFilter = filter;
+    document.getElementById("f-All").className = "";
+    document.getElementById("f-Pending").className = "";
+    document.getElementById("f-Approved").className = "";
+    document.getElementById("f-Rejected").className = "";
+    document.getElementById("f-" + filter).className = "active";
+    showAll();
+  }
+
+  // Find a leave by id
+  function getLeave(id) {
+    for (var i = 0; i < leaves.length; i++) {
+      if (leaves[i].id == id) {
+        return leaves[i];
+      }
+    }
+  }
+
+  // Count the number of days between two dates (both days included)
+  function countDays(from, to) {
+    var start = new Date(from);
+    var end = new Date(to);
+    return Math.round((end - start) / 86400000) + 1;
+  }
+
+  // ---------- EMPLOYEE ----------
+  function applyLeave() {
+    var name = document.getElementById("empName").value;
+    var empId = document.getElementById("empId").value;
+    var type = document.getElementById("leaveType").value;
+    var from = document.getElementById("fromDate").value;
+    var to = document.getElementById("toDate").value;
+    var reason = document.getElementById("reason").value;
+    var valid = true;
+
+    document.getElementById("errName").innerHTML = "";
+    document.getElementById("errId").innerHTML = "";
+    document.getElementById("errFrom").innerHTML = "";
+    document.getElementById("errTo").innerHTML = "";
+    document.getElementById("errReason").innerHTML = "";
+
+    if (name.length < 2) {
+      document.getElementById("errName").innerHTML = "Please enter your name.";
+      valid = false;
+    }
+    if (empId.length < 2) {
+      document.getElementById("errId").innerHTML = "Please enter your employee ID.";
+      valid = false;
+    }
+    if (from == "") {
+      document.getElementById("errFrom").innerHTML = "Choose a start date.";
+      valid = false;
+    }
+    if (to == "") {
+      document.getElementById("errTo").innerHTML = "Choose an end date.";
+      valid = false;
+    }
+    if (from != "" && to != "" && to < from) {
+      document.getElementById("errTo").innerHTML = "End date must be after the start date.";
+      valid = false;
+    }
+    if (reason.length < 5) {
+      document.getElementById("errReason").innerHTML = "Please enter the reason.";
+      valid = false;
+    }
+
+    if (valid == true) {
+      var days = countDays(from, to);
+      leaves.unshift({
+        id: new Date().getTime(),
+        name: name,
+        empId: empId,
+        type: type,
+        from: from,
+        to: to,
+        days: days,
+        reason: reason,
+        status: "Pending"
+      });
+      saveLeaves();
+      showAll();
+
+      document.getElementById("empName").value = "";
+      document.getElementById("empId").value = "";
+      document.getElementById("fromDate").value = "";
+      document.getElementById("toDate").value = "";
+      document.getElementById("reason").value = "";
+
+      showMessage("Leave Request Sent!", "Your request for " + days + (days == 1 ? " day" : " days") + " of " + type + " is waiting for manager approval.");
+    }
+  }
+
+  function cancelLeave(id) {
+    for (var i = 0; i < leaves.length; i++) {
+      if (leaves[i].id == id) {
+        leaves.splice(i, 1);
+        break;
+      }
+    }
+    saveLeaves();
+    showAll();
+    showMessage("Request Cancelled", "Your leave request has been removed.");
+  }
+
+  // ---------- MANAGER ----------
+  function changeStatus(id, status) {
+    var l = getLeave(id);
+    l.status = status;
+    saveLeaves();
+    showAll();
+    showMessage("Leave " + status + "!", l.name + "'s " + l.type + " request has been " + status.toLowerCase() + ".");
+  }
+
+  // ---------- MESSAGE POPUP ----------
+  function showMessage(title, text) {
+    document.getElementById("msgTitle").innerHTML = title;
+    document.getElementById("msgText").textContent = text;
+    document.getElementById("msgPopup").style.display = "block";
+  }
+
+  function closeMsgPopup() {
+    document.getElementById("msgPopup").style.display = "none";
+  }
+
+  // Run when the page opens
+  loadLeaves();
+  showAll();
+</script>
+
+</body>
+</html>
